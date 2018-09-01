@@ -1,0 +1,113 @@
+  - name: Install packages for apt over HTTPS
+    apt:
+      name: "{{item}}"
+      state: present
+      update_cache: yes
+    with_items:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg2
+      - software-properties-common
+
+  - name: Add Docker apt key
+    apt_key:
+      url: https://download.docker.com/linux/debian/gpg
+      state: present
+
+  - name: Add Docker apt repository
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/debian stretch stable
+      state: present
+
+  - name: Update packages
+    apt:
+      update_cache: yes
+
+  - name: Install Docker via apt
+    apt:
+      name: docker-ce
+      install-recommends: no
+      state: present
+
+  - name: Install pip for installed python version
+    apt:
+      name="{{ pip_package }}"
+      state=present
+    vars:
+      - pip_package: "{{ 'python3-pip' if ansible_python['version']['major']==3 else 'python-pip' }}"
+
+  - name: Install docker via pip
+    pip:
+      name: docker
+      state: present
+      executable: "{{ pip_executable }}"
+    vars:
+      - pip_executable: "{{ 'pip3' if ansible_python['version']['major']==3 else 'pip' }}"
+
+  - name: Add docker_users to docker group
+    user:
+      name: "{{ item }}"
+      groups: docker
+      append: yes
+    with_items:
+      docker_users
+
+ 
+  - name: update
+    command: docker pull tvial/docker-mailserver:latest
+      
+  - name: setup
+    state: present
+    get_url:
+        url: https://raw.githubusercontent.com/tomav/docker-mailserver/master/setup.sh
+        dest: ./setup.sh
+        
+  - name: permission
+    shell: chmod a+x ./setup.sh
+
+  - name: setup2
+    state: present
+    get_url:
+        url: https://raw.githubusercontent.com/tomav/docker-mailserver/master/docker-compose.yml.dist
+        dest: ./docker-compose.yml 
+        
+  - name: .env
+    state: present
+    get_url:
+        url: https://raw.githubusercontent.com/tomav/docker-mailserver/master/.env.dist
+        dest: ./.env 
+        
+  - name: docker-compose
+    state: present 
+    get_url:
+        url: https://github.com/docker/compose/releases/download/1.22.0/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        
+  - name: restart
+    shell: chmod +x /usr/local/bin/docker-compose
+    
+  - name: creating container
+    shell: docker-compose up -d mail
+    
+  - name: replace
+    replace:
+      path: "setup.sh"
+      regexp: "-ti"
+      replace: "-i"
+
+
+  - name: setup mail account
+    shell: ./setup.sh email add {{ created_email_user }}@{{ SLD }}.{{TLD}} {{ password }}
+    
+    
+  - name: Make protocols ipv4
+    shell: docker exec -i mail postconf -e inet_protocols=ipv4 
+
+  - name: restart container
+    shell: docker container restart mail
+
+    
+    
+    
+

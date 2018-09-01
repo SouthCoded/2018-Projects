@@ -1,0 +1,12 @@
+- hosts: all
+  become: yes
+  become_user: root
+  become_method: sudo
+  roles:
+    - role: domain_config
+
+  vars:
+  - mail_domain: "mail.a.b"
+  - SLD: "a"
+  - TLD: "b"
+ 

@@ -1,0 +1,14 @@
+
+---
+- hosts: all
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks: 
+  - name: Install Packages
+    hosts: all
+    apt: name={{ item }} state=latest
+    with_items:
+       - vim
+       - git
+       - curl  

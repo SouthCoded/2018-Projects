@@ -1,0 +1,45 @@
+  - name: get my public IP
+    ipify_facts:
+    delegate_to: localhost
+    register: local
+  
+  - name: get my mailserver
+    ipify_facts:
+    register: mailserver
+
+  
+  - name: Get Existing DNS Records for domain
+    uri:
+      url:  "http://api.namecheap.com/xml.response?ApiUser={{NAMECHEAP_API_USERNAME}}&ApiKey={{NAMECHEAP_API_KEY}}&UserName={{NAMECHEAP_API_USERNAME}}&Command=namecheap.domains.dns.getHosts&ClientIp={{ local.ansible_facts.ipify_public_ip }}&SLD={{SLD}}&TLD={{TLD}}"
+      method: GET
+      return_content: yes
+      headers:
+        Content-Length: 0
+    vars:
+      api_command: namecheap.domains.dns.setHosts
+    register: output
+    delegate_to: localhost
+
+  - debug:
+      var: output
+
+  - name: Replace records for mail server
+    uri:
+      url:  "http://api.namecheap.com/xml.response?ApiUser={{ NAMECHEAP_API_USERNAME }}&apikey={{ NAMECHEAP_API_KEY }}&username={{ NAMECHEAP_API_USERNAME }}&Command={{ api_command }}&ClientIp={{ local.ansible_facts.ipify_public_ip }}&SLD={{ SLD }}&TLD={{ TLD }}&HostName1={{ host_name_1 }}&RecordType1={{record_type_1}}&Address1={{address_1}}&TTL1={{ttl_1}}&HostName2={{host_name_2}}&RecordType2={{record_type_2}}&Address2={{address_2}}&TTL2={{ttl_2}}&EmailType={{email_type}}"
+      method: POST
+      return_content: yes
+      headers:
+        Content-Length: 0
+    vars:
+      api_command: namecheap.domains.dns.setHosts
+      host_name_1: _dmarc
+      record_type_1: TXT
+      address_1: "{{ mailserver.ansible_facts.ipify_public_ip }}"
+      ttl_1: 10000
+      host_name_2: "@"
+      record_type_2: MXE
+      address_2: "{{ mailserver.ansible_facts.ipify_public_ip }}"
+      ttl_2: 10000
+      email_type: MXE
+    register: output
+    delegate_to: localhost

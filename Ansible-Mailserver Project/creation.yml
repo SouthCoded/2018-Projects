@@ -1,0 +1,10 @@
+# Basic deploy of a service
+
+---
+- hosts: all
+  tasks:
+    - name: apply
+      terraform:
+        project_path: '/home/intern/Documents/Kali_Terraform'
+        state: present
+

@@ -1,0 +1,42 @@
+  - name: echo SSL
+    shell: echo "SSL_TYPE=letsencrypt" >> /etc/environment
+
+  - name: Get certbot
+    get_url:
+        url: https://dl.eff.org/certbot-auto
+        dest: ./certbot-auto
+
+        
+  - name: permission
+    file: 
+      path: certbot-auto
+      mode: "a+x"
+      state: file
+   
+  - name: Running cert-bot 
+    shell: "./certbot-auto certonly --standalone --agree-tos --keep --non-interactive --text --rsa-key-size 4096 --email {{ your_email }} --domains mail.{{ SLD }}.{{ TLD }}"
+
+    # expect:
+    #   command: ./certbot-auto
+    #   responses:
+    #     "Please enter in your domain": "{{ mail_domain }}"
+    #     "1-4": "3"
+    #     "1-2": "1"
+    #     "agree": "a"
+    #     "yes": "no"
+    #     "Do you want to continue?": "y" 
+    #     "Enter email address": "{{ your_email }}"
+
+
+  
+  - name: Move certs to docker
+    shell: docker cp /etc/letsencrypt/ mail:etc
+   
+  - name: add certificate
+    shell: docker exec -i mail postconf -e smtpd_tls_cert_file=/etc/letsencrypt/live/mail.{{ SLD }}.{{ TLD }}/fullchain.pem
+
+  - name: add private key 
+    shell: docker exec -i mail postconf -e smtpd_tls_key_file=/etc/letsencrypt/live/mail.{{ SLD }}.{{ TLD }}/privkey.pem
+
+  - name: restart container
+    shell: docker container restart mail

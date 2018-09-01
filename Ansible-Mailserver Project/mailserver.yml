@@ -1,0 +1,14 @@
+- hosts: all
+  become: yes
+  become_user: root
+  become_method: sudo
+  roles:
+    - role: mailserver
+
+  vars:
+  - domain: "a.b"
+  - created_email_user: "user"
+  - password: "password"
+
+
+ 

@@ -1,0 +1,12 @@
+- hosts: all
+  become: yes
+  become_user: root
+  become_method: sudo
+  roles:
+    - role: ssl_setup
+
+  vars:
+  - mail_domain: "mail.a.b"
+  - your_email: "user@gmail.com"
+
+ 
