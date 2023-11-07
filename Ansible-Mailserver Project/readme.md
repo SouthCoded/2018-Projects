@@ -3,7 +3,7 @@ Mainly setting the server to mail.{{ your domain }} and making sure that the fir
 emails an easy tool to use is sendemail. Below is an example request I made. 
 
 ```
-sendemail -t duncan.pf2@gmail.com -s mail.rabbit.cricket -m hello -f test@rabbit.cricket -xu test@rabbit.cricket -xp password -o tls=no
+sendemail -t <insert_email> -s mail.rabbit.cricket -m hello -f test@rabbit.cricket -xu test@rabbit.cricket -xp password -o tls=no
 
 ```
 
